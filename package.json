@@ -1,0 +1,12 @@
+{
+  "name": "uskeep-website",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "SITE_URL=http://localhost:4178 npm run build && node scripts/serve.mjs",
+    "preview": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs"
+  }
+}
