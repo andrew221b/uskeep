@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Public client configuration only. Server secrets must never be placed here.
+[build.environment]
+  SITE_URL = "https://uskeep.netlify.app"
+  APP_STORE_URL = "https://apps.apple.com/app/id6816658831"
+  PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=app.uskeep.vickand"
+  LEGAL_APPROVED = "true"
+  VITE_SUPABASE_URL = "https://byqwauxvnkmgxneaiwji.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Zit9cnOzWLiGQNg8tyuoug_pS73IE-K"
