@@ -71,14 +71,14 @@ const vars = {
 };
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
-for (const page of ["index.html", "privacy/index.html", "terms/index.html", "support/index.html", "delete-account/index.html"]) {
+for (const page of ["index.html", "privacy/index.html", "terms/index.html", "support/index.html", "delete-account/index.html", "join/index.html"]) {
   const html = await readFile(resolve(root, page), "utf8");
   const rendered = Object.entries(vars).reduce((value, [key, replacement]) => value.replaceAll(key, replacement), html);
   const destination = resolve(out, page);
   await mkdir(resolve(destination, ".."), { recursive: true });
   await writeFile(destination, rendered);
 }
-for (const file of ["styles-v2.css", "editorial.css", "main.js", "theme-init.js", "delete-account.js"]) await cp(resolve(root, file), resolve(out, file));
+for (const file of ["styles-v2.css", "editorial.css", "main.js", "theme-init.js", "delete-account.js", "join.js", "join.css", "_headers"]) await cp(resolve(root, file), resolve(out, file));
 for (const file of [
   "assets/brand/uskeep-mark.png",
   "assets/photos/lisbon-memory.jpg", "assets/photos/everyday-together.jpg",
@@ -88,6 +88,16 @@ for (const file of [
   await mkdir(resolve(destination, ".."), { recursive: true });
   await cp(resolve(root, file), destination);
 }
+await mkdir(resolve(out, ".well-known"), { recursive: true });
+await cp(resolve(root, ".well-known/apple-app-site-association"), resolve(out, ".well-known/apple-app-site-association"));
+const fingerprints = (process.env.ANDROID_APP_SIGNING_SHA256 || "").split(",").map(value => value.trim().toUpperCase()).filter(Boolean);
+if (fingerprints.some(value => !/^(?:[A-F0-9]{2}:){31}[A-F0-9]{2}$/.test(value))) throw new Error("ANDROID_APP_SIGNING_SHA256 must be the SHA-256 App signing certificate from Google Play Console");
+if (fingerprints.length) {
+  await writeFile(resolve(out, ".well-known/assetlinks.json"), JSON.stringify([{
+    relation: ["delegate_permission/common.handle_all_urls"],
+    target: { namespace: "android_app", package_name: "app.uskeep.vickand", sha256_cert_fingerprints: fingerprints },
+  }]));
+} else await cp(resolve(root, ".well-known/assetlinks.json"), resolve(out, ".well-known/assetlinks.json"));
 const urls = ["/", "/privacy/", "/terms/", "/support/", "/delete-account/"];
 await writeFile(resolve(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((path) => `  <url><loc>${siteUrl}${path}</loc></url>`).join("\n")}\n</urlset>\n`);
 await writeFile(resolve(out, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`);
