@@ -27,6 +27,28 @@ html { scrollbar-color: var(--rose) var(--bg); }
 .hero-phone-wrap { filter: drop-shadow(0 30px 24px rgb(10 18 22 / .24)); }
 .phone-companion { filter: drop-shadow(0 16px 18px rgb(10 18 22 / .17)); }
 .hero .scattered-word { line-height: 1.25; }
+.hero-store-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  width: min(100%, 460px);
+  gap: 10px;
+  margin-top: 26px;
+}
+.hero-store-link {
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  padding: 9px 10px;
+  gap: 8px;
+  border-radius: 12px;
+}
+.hero-store-link .store-link-icon { width: 21px; height: 21px; }
+.hero-store-link .store-link-icon-play { width: 20px; height: 20px; }
+.hero-store-link .store-copy { min-width: 0; }
+.hero-store-link .store-copy small { color: rgb(255 255 255 / .76); font-size: clamp(.69rem, 2.2vw, .72rem); letter-spacing: 0; white-space: nowrap; }
+.hero-store-link .store-copy strong { font-size: clamp(.86rem, 2.8vw, .94rem); white-space: nowrap; }
 .scattered-word.is-gathering .scatter-letters > span { animation: scattered-drift 6.4s ease-in-out infinite alternate; animation-delay: calc(var(--letter-delay, 0ms) * -10); }
 .scattered-word.is-resting .scatter-letters > span { animation-play-state: paused; }
 .scattered-word:not(.is-gathering) .scatter-letters > span { transform: translate(var(--scatter-x), var(--scatter-y)) rotate(var(--scatter-angle)); }
@@ -220,6 +242,10 @@ main { view-transition-name: page-content; }
   .nav-links a[aria-current] { font-weight: 750; }
   .nav-selection { inset: 3px 0; }
   .hero { padding-bottom: 15px; }
+  .hero-store-links { width: min(100%, 460px); margin-top: 22px; gap: 8px; }
+  .hero-store-link { min-height: 58px; padding-inline: 8px; gap: 6px; }
+  .hero-store-link .store-link-icon { width: 19px; height: 19px; }
+  .hero-store-link .store-link-icon-play { width: 18px; height: 18px; }
   .hero-art::before { inset: 0 0 28px; }
   .hero-description { font-size: 1.125rem; }
   .life-desk { padding-block: 65px; }

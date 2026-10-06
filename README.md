@@ -1,10 +1,12 @@
 # Uskeep website
 
-Standalone, dependency-free static marketing site. DayDraft informed the section rhythm and navigation; all Uskeep copy, palette, imagery and logo motion are original to this project. The screenshots are from the local iOS Simulator with demo content.
+Standalone, dependency-free static marketing site. DayDraft informed the section rhythm and navigation; Uskeep copy, palette, and illustrations are original to this project, while the current logo artwork is supplied by the product owner. The screenshots are from the local iOS Simulator with demo content.
 
 The editorial image is generated, not a real customer photo; its prompt and provenance are in [ASSET_NOTES.md](ASSET_NOTES.md). The production bundle uses optimized JPEGs and contains no build-time JavaScript dependency.
 
 The page moves from scattered everyday details to their place in Uskeep: an interactive desk introduces the problem, then Everyday, Money, Memories, Details, and Care chapters show the tools through illustrative records. Sample entries are not customer evidence or the app's initial state. This handoff covers local builds and previews; it does not establish production readiness for accounts, shared data, notifications, or purchases. The current sign-in and store limitations are recorded in [AUTH_AND_PURCHASES_CHECK.md](../docs/AUTH_AND_PURCHASES_CHECK.md).
+
+Searchable feature pages cover shared planning, memories, and care records at `/shared-planner/`, `/memories/`, and `/care/`. Each page has its own title, description, canonical URL, breadcrumb markup, and links back into the rest of the site. The sitemap lists the public pages; `/join/` and `/delete-account/` are deliberately excluded. The home page answers common product questions in visible text.
 
 The website's Modern Keepsake surface is documented in [marketing-website.md](../.impeccable/surfaces/marketing-website.md). `styles-v2.css` provides the base and `editorial.css` follows it with the active editorial overrides. These website values do not replace the native app system in `DESIGN.md` or `.impeccable/design.json`.
 
@@ -33,7 +35,9 @@ npm run check
 
 Deploy the `website/dist` folder as static files. Publisher defaults come from this repository's [src/data/publisher.json](src/data/publisher.json). Keep it consistent with the app's publisher record when updating publisher details. Environment overrides remain available through `PUBLISHER_NAME`, `PUBLISHER_POSTAL_ADDRESS`, `SUPPORT_EMAIL`, and `PRIVACY_EMAIL`.
 
-A public build still requires `LEGAL_APPROVED=true`, a populated postal address, and the HTTPS Supabase URL/public publishable key used by the secure account-deletion flow. Configured identity does not grant legal approval or establish backend readiness. Never use a service-role key. Optional `APP_STORE_URL` and `PLAY_STORE_URL` enable store links; without them the site honestly says “Coming soon”. After launch, set the app's `VITE_PRIVACY_POLICY_URL`, `VITE_TERMS_URL`, and `VITE_SUPPORT_URL` to this site's public paths and rebuild the app.
+A public build still requires `LEGAL_APPROVED=true`, a populated postal address, and the HTTPS Supabase URL/public publishable key used by the secure account-deletion flow. Configured identity does not grant legal approval or establish backend readiness. Never use a service-role key. `APP_STORE_URL` and `PLAY_STORE_URL` configure the lower store links; the hero uses the current store listing URLs. After launch, set the app's `VITE_PRIVACY_POLICY_URL`, `VITE_TERMS_URL`, and `VITE_SUPPORT_URL` to this site's public paths and rebuild the app.
+
+For Yandex Webmaster, add the verification token as `YANDEX_VERIFICATION` in Netlify's site environment once a domain you control is attached. For optional Yandex Metrica, add the numeric counter ID as `YANDEX_METRIKA_ID`. The site then shows a consent choice and loads Metrica only after the visitor allows it; the privacy page gets a matching disclosure. No counter or verification token is currently hardcoded into the site. The build does not add Google Analytics, Tag Manager, or conversion tracking.
 
 The earlier local-preview legal callout is omitted from both local and public page output. The public build gates above still apply; removing a visual callout is not legal approval.
 

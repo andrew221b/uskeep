@@ -2,6 +2,9 @@
   command = "npm run build"
   publish = "dist"
 
+[build.processing.html]
+  pretty_urls = true
+
 # Public client configuration only. Server secrets must never be placed here.
 [build.environment]
   SITE_URL = "https://uskeep.netlify.app"

@@ -26,6 +26,10 @@ const supportEmail = process.env.SUPPORT_EMAIL?.trim() || publisher.email;
 const privacyEmail = process.env.PRIVACY_EMAIL?.trim() || publisher.email;
 const supabaseUrl = process.env.VITE_SUPABASE_URL?.trim();
 const supabasePublishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+const metricaId = process.env.YANDEX_METRIKA_ID?.trim() || '';
+if (metricaId && !/^[1-9][0-9]{5,14}$/.test(metricaId)) throw new Error('YANDEX_METRIKA_ID must be a numeric Yandex Metrica counter ID');
+const yandexVerification = process.env.YANDEX_VERIFICATION?.trim() || '';
+if (yandexVerification && !/^[a-zA-Z0-9_-]{8,128}$/.test(yandexVerification)) throw new Error('YANDEX_VERIFICATION must be the token from Yandex Webmaster');
 if (!localPreview && (process.env.LEGAL_APPROVED !== 'true' || !postalAddress)) {
   throw new Error("Public build requires LEGAL_APPROVED=true and PUBLISHER_POSTAL_ADDRESS after publisher/legal review");
 }
@@ -68,19 +72,31 @@ const vars = {
   __SUPABASE_URL__: escapeHtml(supabaseUrl || ""),
   __SUPABASE_PUBLISHABLE_KEY__: escapeHtml(supabasePublishableKey || ""),
   __LEGAL_CALLOUT__: '',
+  __YANDEX_VERIFICATION_META__: yandexVerification
+    ? `<meta name="yandex-verification" content="${escapeHtml(yandexVerification)}">`
+    : '',
+  __WEBSITE_ANALYTICS_PRIVACY__: metricaId
+    ? '<p>Website analytics are optional. If you choose Allow analytics, Yandex Metrica receives website page visits and basic browser or device data and may set cookies. Session replay is off, and we do not send your in-app records to Metrica. You can change your choice through Analytics settings in the website footer.</p>'
+    : '',
+  __METRICA_ORIGIN__: metricaId ? ' https://mc.yandex.ru' : '',
 };
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
-for (const page of ["index.html", "privacy/index.html", "terms/index.html", "support/index.html", "delete-account/index.html", "join/index.html"]) {
+for (const page of ["index.html", "shared-planner/index.html", "memories/index.html", "care/index.html", "privacy/index.html", "terms/index.html", "support/index.html", "delete-account/index.html", "join/index.html", "404.html"]) {
   const html = await readFile(resolve(root, page), "utf8");
-  const rendered = Object.entries(vars).reduce((value, [key, replacement]) => value.replaceAll(key, replacement), html);
+  let rendered = Object.entries(vars).reduce((value, [key, replacement]) => value.replaceAll(key, replacement), html);
+  if (metricaId && !['join/index.html', 'delete-account/index.html', '404.html'].includes(page)) {
+    rendered = rendered.replace('</head>', `<link rel="stylesheet" href="/metrics.css"><script defer src="/metrics.js" data-counter-id="${metricaId}"></script></head>`);
+  }
   const destination = resolve(out, page);
   await mkdir(resolve(destination, ".."), { recursive: true });
   await writeFile(destination, rendered);
 }
-for (const file of ["styles-v2.css", "editorial.css", "main.js", "theme-init.js", "delete-account.js", "join.js", "join.css", "_headers"]) await cp(resolve(root, file), resolve(out, file));
+for (const file of ["styles-v2.css", "editorial.css", "discover.css", "metrics.css", "metrics.js", "main.js", "theme-init.js", "delete-account.js", "join.js", "join.css"]) await cp(resolve(root, file), resolve(out, file));
+const headers = await readFile(resolve(root, '_headers'), 'utf8');
+await writeFile(resolve(out, '_headers'), headers.replaceAll('__METRICA_ORIGIN__', vars.__METRICA_ORIGIN__));
 for (const file of [
-  "assets/brand/uskeep-mark.png",
+  "assets/brand/uskeep-mark.png", "assets/brand/uskeep-icon.png", "assets/brand/uskeep-mark-transparent.png",
   "assets/photos/lisbon-memory.jpg", "assets/photos/everyday-together.jpg",
   "assets/screens/home-site.jpg", "assets/screens/memories-site.jpg",
 ]) {
@@ -98,7 +114,7 @@ if (fingerprints.length) {
     target: { namespace: "android_app", package_name: "app.uskeep.vickand", sha256_cert_fingerprints: fingerprints },
   }]));
 } else await cp(resolve(root, ".well-known/assetlinks.json"), resolve(out, ".well-known/assetlinks.json"));
-const urls = ["/", "/privacy/", "/terms/", "/support/", "/delete-account/"];
+const urls = ["/", "/shared-planner/", "/memories/", "/care/", "/privacy/", "/terms/", "/support/"];
 await writeFile(resolve(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((path) => `  <url><loc>${siteUrl}${path}</loc></url>`).join("\n")}\n</urlset>\n`);
 await writeFile(resolve(out, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`);
 console.log(`Built Uskeep website in ${out} for ${siteUrl}`);

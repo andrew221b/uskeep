@@ -163,13 +163,13 @@ for (const link of document.querySelectorAll('[data-store]')) {
 let finishIntro = () => {};
 const heroArt = document.querySelector('.hero-art');
 const navMark = document.querySelector('.site-header .brand-icon');
-const introImage = new Image();
-introImage.src = '/assets/brand/uskeep-mark.png';
+const introImage = heroArt ? new Image() : null;
+if (introImage) introImage.src = '/assets/brand/uskeep-mark-transparent.png';
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 const clamp = (t) => Math.max(0, Math.min(1, t));
 const activeAnimations = new Set();
 function animateHero() {
-  if (motionPaused || motionReduced.matches || dataSaver) return;
+  if (motionPaused || motionReduced.matches) return;
   const pose = (el) => getComputedStyle(el).transform;
   const items = [
     ['.phone-companion', [{ transform: 'translateY(24px) ' + pose(rearPhone), opacity: .5 }, { transform: pose(rearPhone), opacity: 1 }], 0],
@@ -186,9 +186,9 @@ function animateHero() {
 }
 async function playIntro() {
   finishIntro();
-  if (!heroArt || !navMark || motionReduced.matches || dataSaver || motionPaused || document.hidden || scrollY > 80) return;
+  if (!heroArt || !navMark || motionReduced.matches || motionPaused || document.hidden) return;
   try { await introImage.decode(); } catch { animateHero(); return; }
-  if (motionReduced.matches || motionPaused || document.hidden || scrollY > 80) return;
+  if (motionReduced.matches || motionPaused || document.hidden) return;
   const sample = document.createElement('canvas');
   sample.width = sample.height = 100;
   const sampleContext = sample.getContext('2d', { willReadFrequently: true });
@@ -200,7 +200,7 @@ async function playIntro() {
   clearTimeout(previewTimer);
   overlay.className = 'brand-intro';
   overlay.setAttribute('aria-hidden', 'true');
-  overlay.innerHTML = '<canvas></canvas><img class="intro-mark" src="/assets/brand/uskeep-mark.png" alt=""><span class="intro-caption">A little closer. A lot more together.</span>';
+  overlay.innerHTML = '<canvas></canvas><img class="intro-mark" src="/assets/brand/uskeep-mark-transparent.png" alt=""><span class="intro-caption">A little closer. A lot more together.</span>';
   document.body.append(overlay);
   const canvas = overlay.querySelector('canvas');
   const ctx = canvas.getContext('2d');
@@ -208,17 +208,23 @@ async function playIntro() {
   const mark = overlay.querySelector('.intro-mark');
   const width = innerWidth, height = innerHeight, cx = width / 2, cy = height / 2;
   const size = Math.min(220, width * .44);
-  const ratio = Math.min(devicePixelRatio || 1, economyMotion ? 1 : 2);
+  // Keep the same star-to-logo moment on phones, with fewer canvas pixels on
+  // touch/save-data devices so the entrance remains responsive on older phones.
+  const lightweightIntro = economyMotion || dataSaver || matchMedia('(pointer: coarse)').matches;
+  const ratio = Math.min(devicePixelRatio || 1, lightweightIntro ? 1 : 2);
   const starColors = root.dataset.theme === 'light' ? ['#5c7080', '#973f53'] : ['#a9c2d0', '#e6a3af'];
   canvas.width = width * ratio; canvas.height = height * ratio;
   ctx.scale(ratio, ratio);
   Object.assign(mark.style, { left: cx - size / 2 + 'px', top: cy - size / 2 + 'px', width: size + 'px', height: size + 'px' });
   const points = [];
-  for (let y = 8; y < 94; y += economyMotion ? 6 : 4) for (let x = 8; x < 94; x += economyMotion ? 6 : 4) {
+  const sampleStep = lightweightIntro ? 7 : 4;
+  for (let y = 8; y < 94; y += sampleStep) for (let x = 8; x < 94; x += sampleStep) {
     const i = (y * 100 + x) * 4;
     const [r, g, b, a] = pixels.slice(i, i + 4);
     if (a < 100 || Math.min(r, g, b) > 195 || r + g + b > 570) continue;
-    const rose = r > b * 1.12;
+    // The supplied mark is rose monochrome; keep the two-color star reveal by
+    // assigning its left and right halves to the app's mineral and rose roles.
+    const rose = x >= 50;
     points.push({ x: cx + (x / 100 - .5) * size, y: cy + (y / 100 - .5) * size, rose, color: starColors[rose ? 1 : 0], n: points.length });
   }
   let raf, started, finished = false, revealed = false;
@@ -314,15 +320,24 @@ if (heroArt) {
       activeAnimations.forEach((animation) => animation.cancel());
       activeAnimations.clear();
     }
-    replayButton.disabled = motionReduced.matches || dataSaver;
+    replayButton.disabled = motionReduced.matches;
   });
-  replayButton.disabled = motionReduced.matches || dataSaver;
+  replayButton.disabled = motionReduced.matches;
   let internalArrival = false;
   try {
     internalArrival = sessionStorage.getItem('uskeep-page-navigation') === 'true';
     sessionStorage.removeItem('uskeep-page-navigation');
   } catch { /* private browsing */ }
-  if (!internalArrival && !location.hash) playIntro();
+  if (!internalArrival && !location.hash) {
+    const beginWhenVisible = () => {
+      if (document.hidden) return;
+      document.removeEventListener('visibilitychange', beginWhenVisible);
+      requestAnimationFrame(() => { void playIntro(); });
+    };
+    if (document.hidden) {
+      document.addEventListener('visibilitychange', beginWhenVisible);
+    } else beginWhenVisible();
+  }
 }
 
 // Keep regular links, browser history, downloads and new-tab behavior native.
